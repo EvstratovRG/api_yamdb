@@ -11,12 +11,7 @@ class User(AbstractUser):
                  (MODERATOR, 'Модератор'),
                  (ADMIN, 'Администратор'))
 
-    username = models.CharField(
-        max_length=150,
-        verbose_name='Имя пользователя',
-        null=False,
-        unique=True
-    )
+
     bio = models.TextField(
         blank=True,
         verbose_name='Биография',
@@ -32,7 +27,7 @@ class User(AbstractUser):
         return self.role == self.ADMIN
 
     @property
-    def is_mderator(self):
+    def is_moderator(self):
         return self.role == self.MODERATOR
 
     def __str__(self):
