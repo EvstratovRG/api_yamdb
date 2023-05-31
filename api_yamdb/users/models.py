@@ -11,7 +11,6 @@ class User(AbstractUser):
                  (MODERATOR, 'Модератор'),
                  (ADMIN, 'Администратор'))
 
-
     bio = models.TextField(
         blank=True,
         verbose_name='Биография',

@@ -1,11 +1,8 @@
 from django.db import models
-from django.contrib.auth import get_user_model
 
+from users.models import User
 from . validators import validate_year
 
-
-User = get_user_model()
-# временно используемая модель юзер
 
 CHOICES = [(i, i) for i in range(1, 11)]
 
