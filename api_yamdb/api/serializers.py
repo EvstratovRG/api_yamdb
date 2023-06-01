@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from reviews.models import Category, Genre, Title, Review, Comment
 from users.models import User
@@ -33,7 +34,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Review
-        fiedls = ()
+        fields = ()
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -50,3 +51,10 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ()
+
+
+class UserSingUpSerializer(serializers.Serializer):
+    """Сериализатор новых пользователей."""
+
+    username = serializers.CharField(max_length=254, required=True)
+    email = serializers.EmailField(max_length=150, required=True)
