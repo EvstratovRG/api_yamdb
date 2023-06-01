@@ -8,3 +8,4 @@ urlpatterns = [
     path('v1/auth/signup/', views.user_signup
          ),
 ]
+

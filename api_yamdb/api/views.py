@@ -65,3 +65,4 @@ def user_signup(request):
                   message=f'Код: {confirmation_code}',
                   from_email='yambd@gmail.com',
                   recipient_list=[email])
+
