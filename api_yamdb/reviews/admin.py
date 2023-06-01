@@ -1,12 +1,12 @@
 from django.contrib import admin
 
-from .models import Category, Genre, Title, Review, Comment
+from .models import Category, Genre, Title, Review, Comment, GenreTitle
 
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('pk', 'name', 'slug')
-    search_fields = ('name',)
+    search_fields = ('pk', 'name',)
     list_filter = ('name',)
     empty_value_display = '-пусто-'
 
@@ -14,23 +14,26 @@ class CategoryAdmin(admin.ModelAdmin):
 @admin.register(Genre)
 class GenreAdmin(admin.ModelAdmin):
     list_display = ('pk', 'name', 'slug')
-    search_fields = ('name',)
+    search_fields = ('pk', 'name',)
     list_filter = ('name',)
     empty_value_display = '-пусто-'
 
 
 @admin.register(Title)
 class TitleAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'name', 'year', 'raiting',
-                    'description')
-    search_fields = ('name', 'year', 'raiting',)
-    list_filter = ('year', 'raiting',)
+    list_display = ('pk', 'name', 'year', 'rating',
+                    'description', 'get_genre_names', 'category')
+    search_fields = ('pk', 'name', 'year', 'rating',)
+    list_filter = ('year', 'rating',)
     empty_value_display = '-пусто-'
+
+    def get_genre_names(self, obj):
+        return ', '.join([genre.name for genre in obj.genre.all()])
 
 
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'text', 'author', 'score',
+    list_display = ('pk', 'title', 'text', 'author', 'score',
                     'pub_date')
     search_fields = ('pk', 'author', 'pub_date',)
     list_filter = ('author', 'pub_date',)
@@ -41,6 +44,11 @@ class ReviewAdmin(admin.ModelAdmin):
 class CommentAdmin(admin.ModelAdmin):
     list_display = ('pk', 'text', 'author',
                     'review', 'pub_date')
-    search_fields = ('username',)
+    search_fields = ('pk', 'username',)
     list_filter = ('author', 'pub_date',)
     empty_value_display = '-пусто-'
+
+
+@admin.register(GenreTitle)
+class GenreTitleAdmin(admin.ModelAdmin):
+    list_display = ('pk', 'title_id', 'genre_id')
