@@ -1,4 +1,4 @@
-
+from abc import ABC
 
 from rest_framework import serializers
 
@@ -34,7 +34,8 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Review
-        fielss = ()
+
+        fields = ()
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -51,3 +52,19 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ()
+
+
+class UserSingUpSerializer(serializers.Serializer):
+    """Сериализатор новых пользователей."""
+
+    username = serializers.CharField(max_length=254, required=True)
+    email = serializers.EmailField(max_length=150, required=True)
+
+
+class UserGetTokenSerializer(serializers.Serializer):
+    """Плучение Токена."""
+
+    username = serializers.CharField(max_length=254, required=True)
+    confirmation_code = serializers.IntegerField(max_value=999999,
+                                                 min_value=100000,
+                                                 required=True)

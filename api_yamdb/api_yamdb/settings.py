@@ -1,4 +1,4 @@
-
+import os
 from pathlib import Path
 
 
@@ -112,10 +112,16 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
 
-
-
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    )
 }
 
+AUTH_USER_MODEL = 'reviews.User'
 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
+EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+EMAIL_HOST_USER = 'yambd@gmail.com'
+EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
