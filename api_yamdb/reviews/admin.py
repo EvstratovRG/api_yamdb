@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Category, Genre, Title, Review, Comment, GenreTitle
+from .models import Category, Genre, Title, Review, Comment, GenreTitle, User
 
 
 @admin.register(Category)
@@ -52,3 +52,12 @@ class CommentAdmin(admin.ModelAdmin):
 @admin.register(GenreTitle)
 class GenreTitleAdmin(admin.ModelAdmin):
     list_display = ('pk', 'title_id', 'genre_id')
+
+
+@admin.register(User)
+class UserAdmin(admin.ModelAdmin):
+    list_display = ('pk', 'username', 'email', 'confirmation_code',
+                    'first_name', 'last_name', 'password')
+    search_fields = ('username',)
+    list_filter = ('username',)
+    empty_value_display = '-пусто-'
