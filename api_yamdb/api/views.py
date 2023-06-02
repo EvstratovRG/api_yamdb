@@ -12,6 +12,7 @@ from reviews.models import Category, Genre, Title, Review, Comment, User
 from . import serializers, permissions
 
 
+
 class CategoryViewSet(viewsets.GenericViewSet,
                       mixins.ListModelMixin,
                       mixins.DestroyModelMixin,
