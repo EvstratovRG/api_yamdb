@@ -22,8 +22,8 @@ class GenreAdmin(admin.ModelAdmin):
 @admin.register(Title)
 class TitleAdmin(admin.ModelAdmin):
     list_display = ('pk', 'name', 'year', 'rating',
-                    'description', 'get_genre_names', 'category')
-    search_fields = ('pk', 'name', 'year', 'rating',)
+                    'description')
+    search_fields = ('name', 'year', 'rating',)
     list_filter = ('year', 'rating',)
     empty_value_display = '-пусто-'
 
@@ -49,11 +49,6 @@ class CommentAdmin(admin.ModelAdmin):
     empty_value_display = '-пусто-'
 
 
-@admin.register(GenreTitle)
-class GenreTitleAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'title_id', 'genre_id')
-
-
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
     list_display = ('pk', 'username', 'email', 'confirmation_code',
@@ -61,3 +56,9 @@ class UserAdmin(admin.ModelAdmin):
     search_fields = ('username',)
     list_filter = ('username',)
     empty_value_display = '-пусто-'
+
+    
+@admin.register(GenreTitle)
+class GenreTitleAdmin(admin.ModelAdmin):
+    list_display = ('pk', 'title_id', 'genre_id')
+

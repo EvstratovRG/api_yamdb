@@ -60,7 +60,7 @@ class Category(models.Model):
     slug = models.SlugField(unique=True, max_length=50)
 
     def __str__(self) -> str:
-        return self.name
+        return f'{self.name}'
 
 
 class Genre(models.Model):
@@ -69,7 +69,7 @@ class Genre(models.Model):
     slug = models.SlugField(unique=True, max_length=50)
 
     def __str__(self) -> str:
-        return self.name
+        return f'{self.name}'
 
 
 class Title(models.Model):
@@ -91,7 +91,7 @@ class Title(models.Model):
     )
 
     def __str__(self) -> str:
-        return self.name
+        return f'{self.name}'
 
 
 class GenreTitle(models.Model):
