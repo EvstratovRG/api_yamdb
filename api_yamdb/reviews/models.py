@@ -1,10 +1,57 @@
+
 from django.db import models
 
-from users.models import User
 from . validators import validate_year
 
 
 CHOICES = [(i, i) for i in range(1, 11)]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 class Category(models.Model):

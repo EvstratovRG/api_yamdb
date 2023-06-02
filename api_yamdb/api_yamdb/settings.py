@@ -1,3 +1,4 @@
+
 from pathlib import Path
 
 
@@ -15,7 +16,6 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
-    'users.apps.UsersConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -111,8 +111,11 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+
+
+
 }
 
-AUTH_USER_MODEL = 'users.User'
+
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'

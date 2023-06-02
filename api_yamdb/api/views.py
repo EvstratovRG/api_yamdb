@@ -1,7 +1,14 @@
+
+
+
+
 from rest_framework import viewsets, mixins
 
-from reviews.models import Category, Genre, Title, Review, Comment
-from users.models import User
+
+
+
+
+from reviews.models import Category, Genre, Title, Review, Comment, User
 from . import serializers
 
 
