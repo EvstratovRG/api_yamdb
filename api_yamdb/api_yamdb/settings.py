@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 
@@ -15,7 +16,6 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
-    'users.apps.UsersConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -116,9 +116,10 @@ REST_FRAMEWORK = {
     )
 }
 
-AUTH_USER_MODEL = 'users.User'
+AUTH_USER_MODEL = 'reviews.User'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_HOST_USER = 'yambd@gmail.com'
+EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
