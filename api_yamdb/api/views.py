@@ -6,7 +6,7 @@ from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework import viewsets, mixins, status, filters
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -66,6 +66,37 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = serializers.UserSerializer
     pagination_class = LimitOffsetPagination
+    permission_classes = (permissions.AdminOnly,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('username',)
+    lookup_field = 'username'
+
+    @action(methods=['GET', 'PATCH'], detail=False,
+            url_path='me', permission_classes=(permissions.AuthorOrReadOnly,))
+    def chang_user_fields(self, request):
+        serializer = serializers.UserSerializer(request.user)
+        if request.method == 'PATCH' and request.user.is_user:
+            serializer = serializers.UserSerializer(
+                request.user,
+                data=request.data,
+                partial=True
+            )
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+        if request.method == 'PATCH' and request.user.is_admin:
+            serializer = serializers.AdminOnlySerializer(
+                request.user,
+                data=request.data,
+                partial=True
+            )
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 
 
 @api_view(['POST'])

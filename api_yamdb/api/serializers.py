@@ -56,12 +56,26 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    """Сериализатор комментариев к отзывам."""
+    """Сериализатор Пользователей"""
 
     class Meta:
         model = User
-        fields = ()
+        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'bio',
+                  'role')
+        read_only_fields = ('role',)
+        lookup_field = 'username'
+        extra_kwargs = {'url': {'lookup_field': 'username'}}
 
+
+class AdminOnlySerializer(serializers.ModelSerializer):
+    """Сериализатор Администратора пользователей."""
+
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'bio',
+                  'role')
+        lookup_field = 'username'
+        extra_kwargs = {'url': {'lookup_field': 'username'}}
 
 class UserSingUpSerializer(serializers.Serializer):
     """Сериализатор новых пользователей."""
