@@ -52,9 +52,10 @@ class CommentAdmin(admin.ModelAdmin):
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
     list_display = ('pk', 'username', 'email', 'confirmation_code',
-                    'first_name', 'last_name', 'password')
+                    'first_name', 'last_name', 'role', 'bio', 'password',)
     search_fields = ('username',)
     list_filter = ('username',)
+    list_editable = ('role',)
     empty_value_display = '-пусто-'
 
     
