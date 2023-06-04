@@ -1,5 +1,3 @@
-from abc import ABC
-
 from rest_framework import serializers
 
 from reviews.models import Category, Genre, Title, Review, Comment, User
@@ -62,20 +60,9 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ('id', 'username', 'email', 'first_name', 'last_name', 'bio',
                   'role')
-        read_only_fields = ('role',)
         lookup_field = 'username'
         extra_kwargs = {'url': {'lookup_field': 'username'}}
 
-
-class AdminOnlySerializer(serializers.ModelSerializer):
-    """Сериализатор Администратора пользователей."""
-
-    class Meta:
-        model = User
-        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'bio',
-                  'role')
-        lookup_field = 'username'
-        extra_kwargs = {'url': {'lookup_field': 'username'}}
 
 class UserSingUpSerializer(serializers.Serializer):
     """Сериализатор новых пользователей."""

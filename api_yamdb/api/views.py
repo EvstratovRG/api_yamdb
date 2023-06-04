@@ -75,28 +75,19 @@ class UserViewSet(viewsets.ModelViewSet):
             url_path='me', permission_classes=(permissions.AuthorOrReadOnly,))
     def chang_user_fields(self, request):
         serializer = serializers.UserSerializer(request.user)
-        if request.method == 'PATCH' and request.user.is_user:
+        if request.method == 'PATCH':
             serializer = serializers.UserSerializer(
                 request.user,
                 data=request.data,
-                partial=True
-            )
+                partial=True)
             if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_200_OK)
-        if request.method == 'PATCH' and request.user.is_admin:
-            serializer = serializers.AdminOnlySerializer(
-                request.user,
-                data=request.data,
-                partial=True
-            )
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_200_OK)
-
+                if request.user.is_user or request.user.is_moderator:
+                    serializer.save(role=request.user.role, partial=True)
+                    return Response(serializer.data, status=status.HTTP_200_OK)
+                else:
+                    serializer.save()
+                    return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-
 
 
 @api_view(['POST'])
