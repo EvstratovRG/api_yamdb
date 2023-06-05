@@ -121,7 +121,6 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     )
 }
-
 AUTH_USER_MODEL = 'reviews.User'
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
