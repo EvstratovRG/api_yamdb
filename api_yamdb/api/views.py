@@ -80,7 +80,7 @@ class UserViewSet(viewsets.ModelViewSet):
                 request.user,
                 data=request.data,
                 partial=True)
-            if serializer.is_valid():
+            if serializer.is_valid(raise_exception=True):
                 if request.user.is_user or request.user.is_moderator:
                     serializer.save(role=request.user.role, partial=True)
                     return Response(serializer.data, status=status.HTTP_200_OK)
@@ -94,7 +94,7 @@ class UserViewSet(viewsets.ModelViewSet):
 @permission_classes([AllowAny])
 def user_signup(request):
     serializer = serializers.UserSingUpSerializer(data=request.data)
-    if serializer.is_valid():
+    if serializer.is_valid(raise_exception=True):
         username = serializer.data['username']
         email = serializer.data['email']
         confirmation_code = randint(100000, 999999)
@@ -120,7 +120,7 @@ def user_signup(request):
 @permission_classes([AllowAny])
 def get_token(request):
     serializer = serializers.UserGetTokenSerializer(data=request.data)
-    if serializer.is_valid():
+    if serializer.is_valid(raise_exception=True):
         user = get_object_or_404(User, username=serializer.data['username'])
     if serializer.data['confirmation_code'] == user.confirmation_code:
         token = RefreshToken.for_user(user).access_token
