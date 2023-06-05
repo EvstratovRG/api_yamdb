@@ -41,18 +41,26 @@ class TitleSerializer(serializers.ModelSerializer):
 class ReviewSerializer(serializers.ModelSerializer):
     """Сериализатор отзывов пользователей."""
 
+    count = serializers.IntegerField(source='get_count')
+
+    def get_count(self, obj):
+        return Review.objects.count()
+
     class Meta:
         model = Review
-
-        fields = ()
+        fields = ('title', 'text', 'author', 'score', 'pub_date', 'count')
 
 
 class CommentSerializer(serializers.ModelSerializer):
     """Сериализатор комментариев к отзывам."""
+    author = serializers.SlugRelatedField(
+        slug_field='username',
+        read_only=True
+    )
 
     class Meta:
         model = Comment
-        fields = ()
+        fields = ('id', 'text', 'author', 'pub_date')
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -60,7 +68,10 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ()
+        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'bio',
+                  'role')
+        lookup_field = 'username'
+        extra_kwargs = {'url': {'lookup_field': 'username'}}
 
 
 class UserSingUpSerializer(serializers.Serializer):
