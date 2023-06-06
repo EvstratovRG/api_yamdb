@@ -20,8 +20,9 @@ class User(AbstractUser):
         verbose_name='Имя пользователя',
         blank=False,
         unique=True,
-        validators=[validate_me, UnicodeUsernameValidator()],
-        max_length=150
+        validators=(validate_me, UnicodeUsernameValidator()),
+        max_length=150,
+        null=False
     )
     email = models.EmailField(
         verbose_name='email address',
@@ -40,7 +41,7 @@ class User(AbstractUser):
     )
     confirmation_code = models.IntegerField(
         verbose_name='Подтверждающий код',
-        default=111111
+        default=11111
     )
 
     @property

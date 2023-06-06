@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from rest_framework import serializers
 
 from reviews.models import Category, Genre, Title, Review, Comment, User
@@ -47,23 +48,52 @@ class UserSerializer(serializers.ModelSerializer):
         extra_kwargs = {'url': {'lookup_field': 'username'}}
 
 
-class UserSingUpSerializer(serializers.Serializer):
+class UserSingUpSerializer(serializers.ModelSerializer):
     """Сериализатор новых пользователей."""
 
-    username = serializers.CharField(max_length=254, required=True)
-    email = serializers.EmailField(max_length=150, required=True)
+    class Meta:
+        model = User
+        fields = ('email', 'username')
 
 
-class UserGetTokenSerializer(serializers.Serializer):
+    # username = serializers.CharField(max_length=150, required=True)
+    # email = serializers.EmailField(max_length=150, required=True)
+    #
+    # def vаlidate_username(self, value):
+    #     if User.objects.filter(username__iexact=value).exists():
+    #         raise serializers.ValidationError('Пользователь с именем: '
+    #                                           f'{username}, уже существует')
+    #     if username == 'me':
+    #         raise serializers.ValidationError('Такое имя не доступно')
+    #     return username
+    #
+    # def validate_email(self, value):
+    #     if User.objects.filter(email__iexact=value).exists():
+    #         raise serializers.ValidationError('Адрес: '
+    #                                           f'{email} уже используетс')
+    #     return email
+
+
+class UserGetTokenSerializer(serializers.ModelSerializer):
     """Плучение Токена."""
 
     username = serializers.CharField(max_length=254, required=True)
     confirmation_code = serializers.IntegerField(max_value=999999,
                                                  min_value=100000,
                                                  required=True)
+    username = serializers.CharField(max_length=150, required=True)
+    confirmation_code = serializers.IntegerField(required=True)
+
+    class Meta:
+        model = User
+        fields = (
+            'username',
+            'confirmation_code'
+        )
 
 
 class ReviewSerializer(serializers.ModelSerializer):
+    """Сериализатор отзывов."""
 
     author = serializers.SerializerMethodField()
 
