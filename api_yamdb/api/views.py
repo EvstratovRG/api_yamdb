@@ -1,5 +1,5 @@
 from random import randint
-
+from django_filters import rest_framework as filters
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django.db.models import Avg
@@ -23,8 +23,7 @@ class CategoryViewSet(viewsets.GenericViewSet,
     queryset = Category.objects.all()
     serializer_class = serializers.CategorySerializer
     permission_classes = (permissions.AdminOrReadOnly,)
-    pagination_class = LimitOffsetPagination
-    filter_backends = (DjangoFilterBackend, filters.SearchFilter,)
+    filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
 
@@ -37,8 +36,7 @@ class GenreViewSet(viewsets.GenericViewSet,
     queryset = Genre.objects.all()
     serializer_class = serializers.GenreSerializer
     permission_classes = (permissions.AdminOrReadOnly,)
-    pagination_class = LimitOffsetPagination
-    filter_backends = (DjangoFilterBackend, filters.SearchFilter,)
+    filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
 
@@ -47,7 +45,25 @@ class TitleViewSet(viewsets.ModelViewSet):
     """Представление произведений."""
     queryset = Title.objects.all().annotate(Avg('reviews__score'))
     serializer_class = serializers.TitleSerializer
+    permission_classes = (permissions.AdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend, filters.OrderingFilter)
+    filterset_fields = ('name', 'year', 'category__slug', 'genre__slug',)
+    ordering_fields = ['name', 'year']
+
+    def get_serializer_class(self):
+        if self.request.method in ('POST', 'PATCH'):
+            return serializers.TitleCreateAndUpdateSerializer
+        return serializers.TitleSerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        genre_slug = self.request.query_params.get('genre')
+        category_slug = self.request.query_params.get('category')
+        if genre_slug:
+            queryset = queryset.filter(genre__slug=genre_slug)
+        if category_slug:
+            queryset = queryset.filter(category__slug=category_slug)
+        return queryset
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -83,7 +99,7 @@ class UserViewSet(viewsets.ModelViewSet):
                 request.user,
                 data=request.data,
                 partial=True)
-            if serializer.is_valid():
+            if serializer.is_valid(raise_exception=True):
                 if request.user.is_user or request.user.is_moderator:
                     serializer.save(role=request.user.role, partial=True)
                     return Response(serializer.data, status=status.HTTP_200_OK)
@@ -92,12 +108,17 @@ class UserViewSet(viewsets.ModelViewSet):
                     return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @action(methods=['PUT'], detail=False,
+            url_path=lookup_field)
+    def no_put_method(self):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def user_signup(request):
     serializer = serializers.UserSingUpSerializer(data=request.data)
-    if serializer.is_valid():
+    if serializer.is_valid(raise_exception=True):
         username = serializer.data['username']
         email = serializer.data['email']
         confirmation_code = randint(100000, 999999)
@@ -123,7 +144,7 @@ def user_signup(request):
 @permission_classes([AllowAny])
 def get_token(request):
     serializer = serializers.UserGetTokenSerializer(data=request.data)
-    if serializer.is_valid():
+    if serializer.is_valid(raise_exception=True):
         user = get_object_or_404(User, username=serializer.data['username'])
     if serializer.data['confirmation_code'] == user.confirmation_code:
         token = RefreshToken.for_user(user).access_token
