@@ -1,5 +1,6 @@
 from random import randint
 
+from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django.db.models import Avg
@@ -96,25 +97,20 @@ class UserViewSet(viewsets.ModelViewSet):
 @permission_classes([AllowAny])
 def user_signup(request):
     serializer = serializers.UserSingUpSerializer(data=request.data)
-    if serializer.is_valid(raise_exception=True):
-        username = serializer.data['username']
-        email = serializer.data['email']
-        confirmation_code = randint(100000, 999999)
-        try:
-            User.objects.get_or_create(username=username,
-                                       email=email,
-                                       confirmation_code=confirmation_code)
-        except ValueError as error:
-            return Response({f'Введены не корректные данные{error}'},
-                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    serializer.is_valid(raise_exception=True)
+    username = serializer.data['username']
+    email = serializer.data['email']
+    confirmation_code = randint(10000, 99999)
+    user, _ = User.objects.get_or_create(username=username,
+                                         email=email,
+                                         confirmation_code=confirmation_code)
 
-        send_mail(subject='confirmation_code',
-                  message=f'Код: {confirmation_code}',
-                  from_email='yambd@gmail.com',
-                  recipient_list=[email])
+    send_mail(subject='confirmation_code',
+              message=f'Код: {confirmation_code}',
+              from_email='yambd@gmail.com',
+              recipient_list=[email])
 
-    return Response({'Пользователь зарегистрирован.'
-                     f' Код подтверждения отправлен {email}'},
+    return Response(serializer.data,
                     status=status.HTTP_200_OK)
 
 
@@ -130,4 +126,4 @@ def get_token(request):
                         status=status.HTTP_201_CREATED)
     else:
         Response({'confirmation_code': 'Неверный код подтверждения!'},
-                 status=status.HTTP_400_BAD_REQUEST)
+                 status=status.HTTP_404_NOT_FOUND)
