@@ -25,8 +25,9 @@ class User(AbstractUser):
     )
     email = models.EmailField(
         verbose_name='email address',
-        blank=True,
+        blank=False,
         unique=True,
+        null=False
     )
     bio = models.TextField(
         blank=True,
