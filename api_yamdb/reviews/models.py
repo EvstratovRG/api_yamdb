@@ -119,15 +119,17 @@ class Review(models.Model):
     )
     score = models.PositiveIntegerField(choices=CHOICES)
     pub_date = models.DateTimeField(auto_now_add=True, db_index=True)
+    # count = models.PositiveIntegerField(default=0)
 
-    def __str__(self) -> str:
+    def __str__(self):
         return self.text
 
     class Meta:
         ordering = ["-pub_date"]
         constraints = [
             models.UniqueConstraint(
-                fields=["author", "title"], name="unique_review"
+                fields=["author", "title"],
+                name="unique_review"
             )
         ]
 
@@ -138,7 +140,8 @@ class Comment(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='comments'
+        related_name='comments',
+        null=True
     )
     review = models.ForeignKey(
         Review,

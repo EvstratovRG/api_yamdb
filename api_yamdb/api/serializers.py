@@ -36,23 +36,6 @@ class TitleSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ReviewSerializer(serializers.ModelSerializer):
-    """Сериализатор отзывов пользователей."""
-
-    class Meta:
-        model = Review
-
-        fields = ()
-
-
-class CommentSerializer(serializers.ModelSerializer):
-    """Сериализатор комментариев к отзывам."""
-
-    class Meta:
-        model = Comment
-        fields = ()
-
-
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор Пользователей"""
 
@@ -78,3 +61,31 @@ class UserGetTokenSerializer(serializers.Serializer):
     confirmation_code = serializers.IntegerField(max_value=999999,
                                                  min_value=100000,
                                                  required=True)
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+
+    author = serializers.SerializerMethodField()
+
+    def get_author(self, obj):  # метод достает только username из словаря
+        return obj.author.username
+
+    class Meta:
+        model = Review
+        fields = ['id', 'title', 'author', 'text', 'score', 'pub_date']
+        extra_kwargs = {
+            'title': {'required': False},
+            'count': {'required': False},
+        }
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    """Сериализатор комментариев к отзывам."""
+    author = serializers.SlugRelatedField(
+        slug_field='username',
+        read_only=True
+    )
+
+    class Meta:
+        model = Comment
+        fields = ('id', 'text', 'author', 'pub_date')
