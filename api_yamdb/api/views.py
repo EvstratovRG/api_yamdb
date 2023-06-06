@@ -7,7 +7,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework import viewsets, mixins, status, filters
 from rest_framework.decorators import api_view, permission_classes, action
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -67,12 +67,13 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.UserSerializer
     pagination_class = LimitOffsetPagination
     permission_classes = (permissions.AdminOnly,)
-    filter_backends = (filters.SearchFilter,)
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter,)
+    pagination_class = LimitOffsetPagination
     search_fields = ('username',)
     lookup_field = 'username'
 
     @action(methods=['GET', 'PATCH'], detail=False,
-            url_path='me', permission_classes=(permissions.AuthorOrReadOnly,))
+            url_path='me', permission_classes=(IsAuthenticated,))
     def chang_user_fields(self, request):
         serializer = serializers.UserSerializer(request.user)
         if request.method == 'PATCH':
