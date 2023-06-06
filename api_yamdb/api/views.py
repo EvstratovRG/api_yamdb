@@ -71,6 +71,7 @@ class UserViewSet(viewsets.ModelViewSet):
     pagination_class = LimitOffsetPagination
     search_fields = ('username',)
     lookup_field = 'username'
+    http_method_names = ('get', 'post', 'delete', 'patch')
 
     @action(methods=['GET', 'PATCH'], detail=False,
             url_path='me', permission_classes=(IsAuthenticated,))
@@ -89,11 +90,6 @@ class UserViewSet(viewsets.ModelViewSet):
                     serializer.save()
                     return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-    @action(methods=['PUT'], detail=False,
-            url_path=lookup_field)
-    def no_put_method(self):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 @api_view(['POST'])

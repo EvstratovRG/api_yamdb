@@ -58,7 +58,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'bio',
+        fields = ('username', 'email', 'first_name', 'last_name', 'bio',
                   'role')
         lookup_field = 'username'
         extra_kwargs = {'url': {'lookup_field': 'username'}}
