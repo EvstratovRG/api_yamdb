@@ -58,8 +58,7 @@ class UserAdmin(admin.ModelAdmin):
     list_editable = ('role',)
     empty_value_display = '-пусто-'
 
-    
+
 @admin.register(GenreTitle)
 class GenreTitleAdmin(admin.ModelAdmin):
     list_display = ('pk', 'title_id', 'genre_id')
-
