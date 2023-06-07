@@ -1,15 +1,20 @@
 from random import randint
 from django_filters import rest_framework as filters
+from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.pagination import LimitOffsetPagination
-from rest_framework import viewsets, mixins, status, filters
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework import viewsets, mixins, status, filters, permissions
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
+
 
 from reviews.models import Category, Genre, Title, Review, Comment, User
 from . import serializers, permissions
@@ -67,17 +72,76 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
-    """Представление произведений."""
+    """Представление отзывов."""
     queryset = Review.objects.all()
     serializer_class = serializers.ReviewSerializer
     pagination_class = LimitOffsetPagination
+    permission_classes = (permissions.IsAuthorOrAdminOrModerator,
+                          IsAuthenticatedOrReadOnly,)
+
+    def get_queryset(self):
+        title = get_object_or_404(Title, id=self.kwargs['title_id'])
+        return title.reviews.all()
+
+    def create(self, request, *args, **kwargs):
+        title = get_object_or_404(Title, id=self.kwargs['title_id'])
+        user = request.user
+
+        # Проверка на уникальность отзыва оставить валидацию или ну ее?
+        if Review.objects.filter(author=user, title=title).exists():
+            return Response(
+                {'detail': 'Отзыв уже оставлен!'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(author=user, title=title)
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data,
+                        status=status.HTTP_201_CREATED,
+                        headers=headers)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    """Представление произведений."""
+    """Представление комментов к отзыву."""
     queryset = Comment.objects.all()
     serializer_class = serializers.CommentSerializer
     pagination_class = LimitOffsetPagination
+    permission_classes = (
+        IsAuthenticatedOrReadOnly,
+        permissions.IsAuthorOrAdminOrModerator,
+    )
+
+    def get_queryset(self):
+        review = get_object_or_404(
+            Review,
+            id=self.kwargs['review_id'],
+            title__id=self.kwargs['title_id']
+        )
+        return review.comments.all()
+
+    def perform_create(self, serializer):
+        review = get_object_or_404(
+            Review,
+            id=self.kwargs['review_id'],
+            title__id=self.kwargs['title_id']
+        )
+        serializer.save(author=self.request.user, review=review)
+
+    def create(self, request, *args, **kwargs):
+        review_id = self.kwargs['review_id']
+        review = get_object_or_404(Review, id=review_id)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(author=request.user, review=review)
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+            headers=headers
+        )
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -89,6 +153,7 @@ class UserViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend, filters.SearchFilter,)
     search_fields = ('username',)
     lookup_field = 'username'
+    http_method_names = ('get', 'post', 'delete', 'patch')
 
     @action(methods=['GET', 'PATCH'], detail=False,
             url_path='me', permission_classes=(IsAuthenticated,))
@@ -108,35 +173,25 @@ class UserViewSet(viewsets.ModelViewSet):
                     return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(methods=['PUT'], detail=False,
-            url_path=lookup_field)
-    def no_put_method(self):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def user_signup(request):
     serializer = serializers.UserSingUpSerializer(data=request.data)
-    if serializer.is_valid(raise_exception=True):
-        username = serializer.data['username']
-        email = serializer.data['email']
-        confirmation_code = randint(100000, 999999)
-        try:
-            User.objects.get_or_create(username=username,
-                                       email=email,
-                                       confirmation_code=confirmation_code)
-        except ValueError as error:
-            return Response({f'Введены не корректные данные{error}'},
-                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    serializer.is_valid(raise_exception=True)
+    username = serializer.data['username']
+    email = serializer.data['email']
+    confirmation_code = randint(10000, 99999)
+    user, _ = User.objects.get_or_create(username=username,
+                                         email=email,
+                                         confirmation_code=confirmation_code)
 
-        send_mail(subject='confirmation_code',
-                  message=f'Код: {confirmation_code}',
-                  from_email='yambd@gmail.com',
-                  recipient_list=[email])
+    send_mail(subject='confirmation_code',
+              message=f'Код: {confirmation_code}',
+              from_email='yambd@gmail.com',
+              recipient_list=[email])
 
-    return Response({'Пользователь зарегистрирован.'
-                     f' Код подтверждения отправлен {email}'},
+    return Response(serializer.data,
                     status=status.HTTP_200_OK)
 
 
@@ -152,4 +207,4 @@ def get_token(request):
                         status=status.HTTP_201_CREATED)
     else:
         Response({'confirmation_code': 'Неверный код подтверждения!'},
-                 status=status.HTTP_400_BAD_REQUEST)
+                 status=status.HTTP_404_NOT_FOUND)
