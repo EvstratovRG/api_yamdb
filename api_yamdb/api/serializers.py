@@ -67,11 +67,7 @@ class UserSingUpSerializer(serializers.Serializer):
     email = serializers.EmailField(max_length=50, required=True)
     print('---13---')
 
-    def validate(self, data):
-        username = self.data['username']
-        email = self.data['email']
-
-    def vаlidate_username(self, data: object):
+    def validate_username(self, data: object):
         username = data
         print('----1----')
         email = self.initial_data.get('email')
