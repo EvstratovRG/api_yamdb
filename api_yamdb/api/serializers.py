@@ -66,9 +66,9 @@ class UserSingUpSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150, required=True)
     email = serializers.EmailField(max_length=50, required=True)
 
-    def validate(self, data):
-        username = self.data['username']
-        email = self.data['email']
+    def validate_username(self, data):
+        username = data
+        email = self.initial_data.get('email')
         if username == 'me':
             raise ValidationError(f'Логин {username} недоступен')
         if not re.match(r'^[\w.@+-]+\Z', username):
