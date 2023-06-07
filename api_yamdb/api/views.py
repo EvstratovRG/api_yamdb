@@ -180,25 +180,19 @@ class UserViewSet(viewsets.ModelViewSet):
 @permission_classes([AllowAny])
 def user_signup(request):
     serializer = UserSingUpSerializer(data=request.data)
-    print('----7----')
     serializer.is_valid(raise_exception=True)
-    print(serializer.data)
-    print('----8----')
     username = serializer.data['username']
-    print('----9----')
     email = serializer.data['email']
-    print('----10----')
     confirmation_code = randint(10000, 99999)
-    print('----11----')
     try:
         user, _ = User.objects.get_or_create(
             username=username,
             email=email,
             confirmation_code=confirmation_code
         )
-        print('----12----')
     except IntegrityError:
-        return Response('Указанные данные не корректны', status=status.HTTP_400_BAD_REQUEST)
+        return Response('Указанные данные не корректны',
+                        status=status.HTTP_400_BAD_REQUEST)
 
     send_mail(subject='confirmation_code',
               message=f'Код: {confirmation_code}',

@@ -65,49 +65,34 @@ class UserSingUpSerializer(serializers.Serializer):
 
     username = serializers.CharField(max_length=150, required=True)
     email = serializers.EmailField(max_length=50, required=True)
-    print('---13---')
 
     def validate(self, data):
-        username = self.data['username']
-        email = self.data['email']
+        username = data['username']
+        email = data['email']
 
-    def vаlidate_username(self, data: object):
-        username = data
-        print('----1----')
-        email = self.initial_data.get('email')
-        print('----2----')
         if username == 'me':
-            print('----3----')
             raise ValidationError(f'Логин {username} недоступен')
         if not re.match(r'^[\w.@+-]+\Z', username):
-            print('----4----')
             raise serializers.ValidationError('Недопустимые символы')
         if User.objects.filter(
                 username=username) and not User.objects.filter(
                 email=email
         ):
-            print('----5----')
             raise serializers.ValidationError(
                 'Пользователь зарегистрирован с другой почтой'
             )
         if User.objects.filter(email=email) and not User.objects.filter(
                 username=username
         ):
-            print('----6----')
             raise serializers.ValidationError(
                 'Пользователь зарегистрирован с другой почтой'
             )
         return data
 
 
-
 class UserGetTokenSerializer(serializers.ModelSerializer):
     """Плучение Токена."""
 
-    username = serializers.CharField(max_length=254, required=True)
-    confirmation_code = serializers.IntegerField(max_value=999999,
-                                                 min_value=100000,
-                                                 required=True)
     username = serializers.CharField(max_length=150, required=True)
     confirmation_code = serializers.IntegerField(required=True)
 

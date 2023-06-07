@@ -5,6 +5,7 @@ from . validators import validate_year, validate_me
 
 
 CHOICES = [(i, i) for i in range(1, 11)]
+UsernameValidator = UnicodeUsernameValidator()
 
 
 class User(AbstractUser):
@@ -20,7 +21,7 @@ class User(AbstractUser):
         verbose_name='Имя пользователя',
         blank=False,
         unique=True,
-        validators=(validate_me, UnicodeUsernameValidator()),
+        validators=(validate_me, UsernameValidator),
         max_length=150,
         null=False
     )
