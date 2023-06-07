@@ -181,7 +181,6 @@ class UserViewSet(viewsets.ModelViewSet):
 def user_signup(request):
     serializer = UserSingUpSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    print(serializer.data)
     username = serializer.data['username']
     email = serializer.data['email']
     confirmation_code = randint(10000, 99999)
@@ -192,7 +191,8 @@ def user_signup(request):
             confirmation_code=confirmation_code
         )
     except IntegrityError:
-        return Response('Указанные данные не корректны', status=status.HTTP_400_BAD_REQUEST)
+        return Response('Указанные данные не корректны',
+                        status=status.HTTP_400_BAD_REQUEST)
 
     send_mail(subject='confirmation_code',
               message=f'Код: {confirmation_code}',

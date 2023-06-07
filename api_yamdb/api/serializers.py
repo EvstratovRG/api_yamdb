@@ -66,9 +66,10 @@ class UserSingUpSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150, required=True)
     email = serializers.EmailField(max_length=50, required=True)
 
-    def validate_username(self, data):
-        username = data
-        email = self.initial_data.get('email')
+    def validate(self, data):
+        username = data['username']
+        email = data['email']
+
         if username == 'me':
             raise ValidationError(f'Логин {username} недоступен')
         if not re.match(r'^[\w.@+-]+\Z', username):
@@ -89,14 +90,9 @@ class UserSingUpSerializer(serializers.Serializer):
         return data
 
 
-
 class UserGetTokenSerializer(serializers.ModelSerializer):
     """Плучение Токена."""
 
-    username = serializers.CharField(max_length=254, required=True)
-    confirmation_code = serializers.IntegerField(max_value=999999,
-                                                 min_value=100000,
-                                                 required=True)
     username = serializers.CharField(max_length=150, required=True)
     confirmation_code = serializers.IntegerField(required=True)
 
