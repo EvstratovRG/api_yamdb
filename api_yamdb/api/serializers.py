@@ -100,6 +100,7 @@ class UserSingUpSerializer(serializers.Serializer):
         return data
 
 
+
 class UserGetTokenSerializer(serializers.ModelSerializer):
     """Плучение Токена."""
 
