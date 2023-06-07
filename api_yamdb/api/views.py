@@ -1,6 +1,5 @@
 from random import randint
-from django_filters import rest_framework as filters
-from django.core.exceptions import ValidationError
+
 from django.core.mail import send_mail
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
@@ -10,8 +9,6 @@ from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import viewsets, mixins, status, filters, permissions
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
@@ -27,6 +24,7 @@ class CategoryViewSet(viewsets.GenericViewSet,
                       mixins.DestroyModelMixin,
                       mixins.CreateModelMixin):
     """Представление категорий."""
+
     queryset = Category.objects.all()
     serializer_class = serializers.CategorySerializer
     permission_classes = (permissions.AdminOrReadOnly,)
@@ -40,6 +38,7 @@ class GenreViewSet(viewsets.GenericViewSet,
                    mixins.DestroyModelMixin,
                    mixins.CreateModelMixin):
     """Представление категорий."""
+
     queryset = Genre.objects.all()
     serializer_class = serializers.GenreSerializer
     permission_classes = (permissions.AdminOrReadOnly,)
@@ -50,6 +49,7 @@ class GenreViewSet(viewsets.GenericViewSet,
 
 class TitleViewSet(viewsets.ModelViewSet):
     """Представление произведений."""
+
     queryset = Title.objects.all().annotate(Avg('reviews__score'))
     serializer_class = serializers.TitleSerializer
     permission_classes = (permissions.AdminOrReadOnly,)
@@ -75,6 +75,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 class ReviewViewSet(viewsets.ModelViewSet):
     """Представление отзывов."""
+
     queryset = Review.objects.all()
     serializer_class = serializers.ReviewSerializer
     pagination_class = LimitOffsetPagination
@@ -108,6 +109,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     """Представление комментов к отзыву."""
+
     queryset = Comment.objects.all()
     serializer_class = serializers.CommentSerializer
     pagination_class = LimitOffsetPagination
@@ -148,6 +150,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 class UserViewSet(viewsets.ModelViewSet):
     """Представление произведений."""
+
     queryset = User.objects.all()
     serializer_class = serializers.UserSerializer
     permission_classes = (permissions.AdminOnly,)

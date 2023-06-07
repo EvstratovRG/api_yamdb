@@ -25,6 +25,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
 class TitleSerializer(serializers.ModelSerializer):
     """Сериализатор произведений."""
+
     genre = GenreSerializer(many=True)
     category = CategorySerializer()
     rating = serializers.IntegerField(
@@ -37,7 +38,8 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    """Сериализатор Пользователей"""
+    """Сериализатор пользователей."""
+
     username = serializers.CharField(
         max_length=150,
         required=True,
@@ -142,6 +144,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     """Сериализатор комментариев к отзывам."""
+
     author = serializers.SlugRelatedField(
         slug_field='username',
         read_only=True
