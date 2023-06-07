@@ -1,7 +1,8 @@
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
-
+from rest_framework.validators import UniqueValidator
 from reviews.models import Category, Genre, Title, Review, Comment, User
+from reviews.validators import validate_me, validate_year
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -22,12 +23,8 @@ class GenreSerializer(serializers.ModelSerializer):
 
 class TitleSerializer(serializers.ModelSerializer):
     """Сериализатор произведений."""
-    genre = serializers.SlugRelatedField(
-        slug_field='slug', many=True, queryset=Genre.objects.all()
-    )
-    category = serializers.SlugRelatedField(
-        slug_field='slug', queryset=Category.objects.all()
-    )
+    genre = GenreSerializer(many=True)
+    category = CategorySerializer()
     rating = serializers.IntegerField(
         source='reviews__score__avg', read_only=True
     )
@@ -39,6 +36,19 @@ class TitleSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор Пользователей"""
+    username = serializers.CharField(
+        max_length=150,
+        required=True,
+        validators=[
+            validate_me,
+            UniqueValidator(queryset=User.objects.all()),
+        ]
+    )
+    email = serializers.CharField(
+        max_length=254,
+        required=True,
+        validators=[UniqueValidator]
+    )
 
     class Meta:
         model = User
@@ -90,6 +100,20 @@ class UserGetTokenSerializer(serializers.ModelSerializer):
             'username',
             'confirmation_code'
         )
+
+
+class TitleCreateAndUpdateSerializer(serializers.ModelSerializer):
+    genre = serializers.SlugRelatedField(
+        slug_field='slug', many=True, queryset=Genre.objects.all()
+    )
+    category = serializers.SlugRelatedField(
+        slug_field='slug', queryset=Category.objects.all()
+    )
+    year = serializers.IntegerField(validators=[validate_year])
+
+    class Meta:
+        model = Title
+        fields = '__all__'
 
 
 class ReviewSerializer(serializers.ModelSerializer):

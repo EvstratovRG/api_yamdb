@@ -1,5 +1,5 @@
 from random import randint
-
+from django_filters import rest_framework as filters
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
@@ -28,8 +28,9 @@ class CategoryViewSet(viewsets.GenericViewSet,
     queryset = Category.objects.all()
     serializer_class = serializers.CategorySerializer
     permission_classes = (permissions.AdminOrReadOnly,)
-    pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+    lookup_field = 'slug'
 
 
 class GenreViewSet(viewsets.GenericViewSet,
@@ -40,16 +41,34 @@ class GenreViewSet(viewsets.GenericViewSet,
     queryset = Genre.objects.all()
     serializer_class = serializers.GenreSerializer
     permission_classes = (permissions.AdminOrReadOnly,)
-    pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+    lookup_field = 'slug'
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     """Представление произведений."""
     queryset = Title.objects.all().annotate(Avg('reviews__score'))
     serializer_class = serializers.TitleSerializer
-    pagination_class = LimitOffsetPagination
+    permission_classes = (permissions.AdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend, filters.OrderingFilter)
+    filterset_fields = ('name', 'year', 'category__slug', 'genre__slug',)
+    ordering_fields = ['name', 'year']
+
+    def get_serializer_class(self):
+        if self.request.method in ('POST', 'PATCH'):
+            return serializers.TitleCreateAndUpdateSerializer
+        return serializers.TitleSerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        genre_slug = self.request.query_params.get('genre')
+        category_slug = self.request.query_params.get('category')
+        if genre_slug:
+            queryset = queryset.filter(genre__slug=genre_slug)
+        if category_slug:
+            queryset = queryset.filter(category__slug=category_slug)
+        return queryset
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -129,10 +148,9 @@ class UserViewSet(viewsets.ModelViewSet):
     """Представление произведений."""
     queryset = User.objects.all()
     serializer_class = serializers.UserSerializer
-    pagination_class = LimitOffsetPagination
     permission_classes = (permissions.AdminOnly,)
-    filter_backends = (DjangoFilterBackend, filters.SearchFilter,)
     pagination_class = LimitOffsetPagination
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter,)
     search_fields = ('username',)
     lookup_field = 'username'
     http_method_names = ('get', 'post', 'delete', 'patch')
