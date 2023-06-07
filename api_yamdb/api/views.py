@@ -20,30 +20,29 @@ from reviews.models import Category, Genre, Title, Review, Comment, User
 from . import serializers, permissions
 
 
-class CategoryViewSet(viewsets.GenericViewSet,
-                      mixins.ListModelMixin,
-                      mixins.DestroyModelMixin,
-                      mixins.CreateModelMixin):
+class ListDestroyCreateWithFilters(
+    viewsets.GenericViewSet,
+    mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
+    mixins.CreateModelMixin
+):
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+    lookup_field = 'slug'
+
+
+class CategoryViewSet(ListDestroyCreateWithFilters):
     """Представление категорий."""
     queryset = Category.objects.all()
     serializer_class = serializers.CategorySerializer
     permission_classes = (permissions.AdminOrReadOnly,)
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
-    lookup_field = 'slug'
 
 
-class GenreViewSet(viewsets.GenericViewSet,
-                   mixins.ListModelMixin,
-                   mixins.DestroyModelMixin,
-                   mixins.CreateModelMixin):
+class GenreViewSet(ListDestroyCreateWithFilters):
     """Представление категорий."""
     queryset = Genre.objects.all()
     serializer_class = serializers.GenreSerializer
     permission_classes = (permissions.AdminOrReadOnly,)
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
-    lookup_field = 'slug'
 
 
 class TitleViewSet(viewsets.ModelViewSet):
