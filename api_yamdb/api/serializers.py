@@ -52,6 +52,11 @@ class UserSerializer(serializers.ModelSerializer):
         validators=[UniqueValidator]
     )
 
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError('123')
+        return value
+
     class Meta:
         model = User
         fields = ('username', 'email', 'first_name', 'last_name', 'bio',

@@ -188,12 +188,12 @@ def user_signup(request):
         user, _ = User.objects.get_or_create(
             username=username,
             email=email,
-            confirmation_code=confirmation_code
         )
     except IntegrityError:
         return Response('Указанные данные не корректны',
                         status=status.HTTP_400_BAD_REQUEST)
-
+    user.confirmation_code = confirmation_code
+    user.save()
     send_mail(subject='confirmation_code',
               message=f'Код: {confirmation_code}',
               from_email='yambd@gmail.com',
@@ -201,7 +201,6 @@ def user_signup(request):
 
     return Response(serializer.data,
                     status=status.HTTP_200_OK)
-
 
 
 @api_view(['POST'])
