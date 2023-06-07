@@ -1,7 +1,7 @@
 from random import randint
 
-from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
+from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
@@ -14,6 +14,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews.models import Category, Genre, Title, Review, Comment, User
 from . import serializers, permissions
+from .serializers import UserSingUpSerializer
 
 
 class CategoryViewSet(viewsets.GenericViewSet,
@@ -96,14 +97,26 @@ class UserViewSet(viewsets.ModelViewSet):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def user_signup(request):
-    serializer = serializers.UserSingUpSerializer(data=request.data)
+    serializer = UserSingUpSerializer(data=request.data)
+    print('----7----')
     serializer.is_valid(raise_exception=True)
+    print(serializer.data)
+    print('----8----')
     username = serializer.data['username']
+    print('----9----')
     email = serializer.data['email']
+    print('----10----')
     confirmation_code = randint(10000, 99999)
-    user, _ = User.objects.get_or_create(username=username,
-                                         email=email,
-                                         confirmation_code=confirmation_code)
+    print('----11----')
+    try:
+        user, _ = User.objects.get_or_create(
+            username=username,
+            email=email,
+            confirmation_code=confirmation_code
+        )
+        print('----12----')
+    except IntegrityError:
+        return Response('Указанные данные не корректны', status=status.HTTP_400_BAD_REQUEST)
 
     send_mail(subject='confirmation_code',
               message=f'Код: {confirmation_code}',
@@ -125,5 +138,5 @@ def get_token(request):
         return Response(f'Token: {token}',
                         status=status.HTTP_201_CREATED)
     else:
-        Response({'confirmation_code': 'Неверный код подтверждения!'},
-                 status=status.HTTP_404_NOT_FOUND)
+        return Response({'confirmation_code': 'Неверный код подтверждения!'},
+                        status=status.HTTP_400_BAD_REQUEST)

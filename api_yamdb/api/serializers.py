@@ -1,3 +1,5 @@
+import re
+
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
 
@@ -65,30 +67,44 @@ class UserSerializer(serializers.ModelSerializer):
         extra_kwargs = {'url': {'lookup_field': 'username'}}
 
 
-class UserSingUpSerializer(serializers.ModelSerializer):
+class UserSingUpSerializer(serializers.Serializer):
     """Сериализатор новых пользователей."""
 
-    class Meta:
-        model = User
-        fields = ('email', 'username')
+    username = serializers.CharField(max_length=150, required=True)
+    email = serializers.EmailField(max_length=50, required=True)
+    print('---13---')
 
+    def validate(self, data):
+        username = self.data['username']
+        email = self.data['email']
 
-    # username = serializers.CharField(max_length=150, required=True)
-    # email = serializers.EmailField(max_length=150, required=True)
-    #
-    # def vаlidate_username(self, value):
-    #     if User.objects.filter(username__iexact=value).exists():
-    #         raise serializers.ValidationError('Пользователь с именем: '
-    #                                           f'{username}, уже существует')
-    #     if username == 'me':
-    #         raise serializers.ValidationError('Такое имя не доступно')
-    #     return username
-    #
-    # def validate_email(self, value):
-    #     if User.objects.filter(email__iexact=value).exists():
-    #         raise serializers.ValidationError('Адрес: '
-    #                                           f'{email} уже используетс')
-    #     return email
+    def vаlidate_username(self, data: object):
+        username = data
+        print('----1----')
+        email = self.initial_data.get('email')
+        print('----2----')
+        if username == 'me':
+            print('----3----')
+            raise ValidationError(f'Логин {username} недоступен')
+        if not re.match(r'^[\w.@+-]+\Z', username):
+            print('----4----')
+            raise serializers.ValidationError('Недопустимые символы')
+        if User.objects.filter(
+                username=username) and not User.objects.filter(
+                email=email
+        ):
+            print('----5----')
+            raise serializers.ValidationError(
+                'Пользователь зарегистрирован с другой почтой'
+            )
+        if User.objects.filter(email=email) and not User.objects.filter(
+                username=username
+        ):
+            print('----6----')
+            raise serializers.ValidationError(
+                'Пользователь зарегистрирован с другой почтой'
+            )
+        return data
 
 
 class UserGetTokenSerializer(serializers.ModelSerializer):
