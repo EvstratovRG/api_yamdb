@@ -22,7 +22,7 @@
 
 Добавлять отзывы, комментарии и ставить оценки могут только аутентифицированные пользователи.
 
-## *** Самостоятельная регистрация новых пользователей ***
+## ***Самостоятельная регистрация новых пользователей***
 Пользователь отправляет POST-запрос с параметрами email и username на эндпоинт /api/v1/auth/signup/.
 Сервис YaMDB отправляет письмо с кодом подтверждения (confirmation_code) на указанный адрес email.
 Пользователь отправляет POST-запрос с параметрами username и confirmation_code на эндпоинт /api/v1/auth/token/, в ответе на запрос ему приходит token (JWT-токен).
@@ -79,5 +79,7 @@ python3 manage.py runserver
 # ***Авторы проекта***
 
 [Алина Попадченко - Python Developer](https://github.com/alinaPopad)
+
 [Николай Бутенко - Python Developer](https://github.com/RedC0mrade)
+
 [Роман Евстратов - Python Developer](https://github.com/EvstratovRG)
