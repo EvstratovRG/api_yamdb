@@ -3,6 +3,7 @@ import re
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
+
 from reviews.models import Category, Genre, Title, Review, Comment, User
 from reviews.validators import validate_me, validate_year
 
@@ -112,6 +113,8 @@ class UserGetTokenSerializer(serializers.ModelSerializer):
 
 
 class TitleCreateAndUpdateSerializer(serializers.ModelSerializer):
+    """Сериализатор создания или редактирования произведения."""
+
     genre = serializers.SlugRelatedField(
         slug_field='slug', many=True, queryset=Genre.objects.all()
     )
@@ -130,7 +133,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     author = serializers.SerializerMethodField()
 
-    def get_author(self, obj):  # метод достает только username из словаря
+    def get_author(self, obj):
         return obj.author.username
 
     class Meta:
@@ -152,4 +155,4 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ('id', 'text', 'author', 'pub_date')
+        fields = ('id', 'text', 'author', 'pub_date',)

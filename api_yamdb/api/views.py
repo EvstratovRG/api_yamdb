@@ -2,17 +2,16 @@ from random import randint
 
 from django.core.mail import send_mail
 from django.db import IntegrityError
-from django.shortcuts import get_object_or_404
 from django.db.models import Avg
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import viewsets, mixins, status, filters, permissions
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework import viewsets, mixins, status, filters, permissions
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
-
 
 from reviews.models import Category, Genre, Title, Review, Comment, User
 from . import serializers, permissions
@@ -25,9 +24,11 @@ class ListDestroyCreateWithFilters(
     mixins.DestroyModelMixin,
     mixins.CreateModelMixin
 ):
+    """Класс представлений ListDestroyCreate с применением фильтрации."""
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
+    permission_classes = (permissions.AdminOrReadOnly,)
 
 
 class CategoryViewSet(ListDestroyCreateWithFilters):
@@ -35,7 +36,6 @@ class CategoryViewSet(ListDestroyCreateWithFilters):
 
     queryset = Category.objects.all()
     serializer_class = serializers.CategorySerializer
-    permission_classes = (permissions.AdminOrReadOnly,)
 
 
 class GenreViewSet(ListDestroyCreateWithFilters):
@@ -43,7 +43,6 @@ class GenreViewSet(ListDestroyCreateWithFilters):
 
     queryset = Genre.objects.all()
     serializer_class = serializers.GenreSerializer
-    permission_classes = (permissions.AdminOrReadOnly,)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -89,7 +88,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
         title = get_object_or_404(Title, id=self.kwargs['title_id'])
         user = request.user
 
-        # Проверка на уникальность отзыва оставить валидацию или ну ее?
         if Review.objects.filter(author=user, title=title).exists():
             return Response(
                 {'detail': 'Отзыв уже оставлен!'},
@@ -112,10 +110,8 @@ class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = serializers.CommentSerializer
     pagination_class = LimitOffsetPagination
-    permission_classes = (
-        IsAuthenticatedOrReadOnly,
-        permissions.IsAuthorOrAdminOrModerator,
-    )
+    permission_classes = (permissions.IsAuthorOrAdminOrModerator,
+                          IsAuthenticatedOrReadOnly,)
 
     def get_queryset(self):
         review = get_object_or_404(
@@ -148,7 +144,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    """Представление произведений."""
+    """Представление пользователей."""
 
     queryset = User.objects.all()
     serializer_class = serializers.UserSerializer
@@ -181,6 +177,8 @@ class UserViewSet(viewsets.ModelViewSet):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def user_signup(request):
+    """Представление регистрации пользователя."""
+
     serializer = UserSingUpSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     username = serializer.data['username']
@@ -208,6 +206,8 @@ def user_signup(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def get_token(request):
+    """Представление получения токена."""
+
     serializer = serializers.UserGetTokenSerializer(data=request.data)
     if serializer.is_valid(raise_exception=True):
         user = get_object_or_404(User, username=serializer.data['username'])

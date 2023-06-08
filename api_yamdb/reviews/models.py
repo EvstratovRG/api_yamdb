@@ -1,6 +1,7 @@
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+
 from . validators import validate_year, validate_me
 
 
@@ -9,6 +10,7 @@ UsernameValidator = UnicodeUsernameValidator()
 
 
 class User(AbstractUser):
+    """Кастом класс пользователя."""
 
     USER = 'user'
     MODERATOR = 'moderator'
@@ -125,7 +127,6 @@ class Review(models.Model):
     )
     score = models.PositiveIntegerField(choices=CHOICES)
     pub_date = models.DateTimeField(auto_now_add=True, db_index=True)
-    # count = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return self.text
