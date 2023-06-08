@@ -1,6 +1,7 @@
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+
 from . validators import validate_year, validate_me
 
 
@@ -9,6 +10,7 @@ UsernameValidator = UnicodeUsernameValidator()
 
 
 class User(AbstractUser):
+    """Кастом класс пользователя."""
 
     USER = 'user'
     MODERATOR = 'moderator'
@@ -63,6 +65,7 @@ class User(AbstractUser):
 
 class Category(models.Model):
     """Категории произведений."""
+
     name = models.CharField(max_length=256)
     slug = models.SlugField(unique=True, max_length=50)
 
@@ -72,6 +75,7 @@ class Category(models.Model):
 
 class Genre(models.Model):
     """Жанры произведений."""
+
     name = models.CharField(max_length=256)
     slug = models.SlugField(unique=True, max_length=50)
 
@@ -81,6 +85,7 @@ class Genre(models.Model):
 
 class Title(models.Model):
     """Наименование и атрибуты произведений."""
+
     name = models.CharField(max_length=256, blank=False)
     year = models.IntegerField(validators=[validate_year])
     rating = models.FloatField(null=True)
@@ -108,6 +113,7 @@ class GenreTitle(models.Model):
 
 class Review(models.Model):
     """Отзывы пользователей на Title."""
+
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
@@ -121,7 +127,6 @@ class Review(models.Model):
     )
     score = models.PositiveIntegerField(choices=CHOICES)
     pub_date = models.DateTimeField(auto_now_add=True, db_index=True)
-    # count = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return self.text
@@ -138,6 +143,7 @@ class Review(models.Model):
 
 class Comment(models.Model):
     """Комментарии пользователей к отзывам."""
+
     text = models.TextField()
     author = models.ForeignKey(
         User,

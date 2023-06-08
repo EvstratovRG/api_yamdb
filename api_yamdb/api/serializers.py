@@ -3,6 +3,7 @@ import re
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
+
 from reviews.models import Category, Genre, Title, Review, Comment, User
 from reviews.validators import validate_me, validate_year
 
@@ -25,6 +26,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
 class TitleSerializer(serializers.ModelSerializer):
     """Сериализатор произведений."""
+
     genre = GenreSerializer(many=True)
     category = CategorySerializer()
     rating = serializers.IntegerField(
@@ -37,7 +39,8 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    """Сериализатор Пользователей"""
+    """Сериализатор пользователей."""
+
     username = serializers.CharField(
         max_length=150,
         required=True,
@@ -51,6 +54,11 @@ class UserSerializer(serializers.ModelSerializer):
         required=True,
         validators=[UniqueValidator]
     )
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError('123')
+        return value
 
     class Meta:
         model = User
@@ -105,6 +113,8 @@ class UserGetTokenSerializer(serializers.ModelSerializer):
 
 
 class TitleCreateAndUpdateSerializer(serializers.ModelSerializer):
+    """Сериализатор создания или редактирования произведения."""
+
     genre = serializers.SlugRelatedField(
         slug_field='slug', many=True, queryset=Genre.objects.all()
     )
@@ -123,7 +133,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     author = serializers.SerializerMethodField()
 
-    def get_author(self, obj):  # метод достает только username из словаря
+    def get_author(self, obj):
         return obj.author.username
 
     class Meta:
@@ -137,6 +147,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     """Сериализатор комментариев к отзывам."""
+
     author = serializers.SlugRelatedField(
         slug_field='username',
         read_only=True
@@ -144,4 +155,4 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ('id', 'text', 'author', 'pub_date')
+        fields = ('id', 'text', 'author', 'pub_date',)
