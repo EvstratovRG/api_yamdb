@@ -1,3 +1,5 @@
+import re
+
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
@@ -23,6 +25,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
 class TitleSerializer(serializers.ModelSerializer):
     """Сериализатор произведений."""
+
     genre = GenreSerializer(many=True)
     category = CategorySerializer()
     rating = serializers.IntegerField(
@@ -35,7 +38,8 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    """Сериализатор Пользователей"""
+    """Сериализатор пользователей."""
+
     username = serializers.CharField(
         max_length=150,
         required=True,
@@ -50,6 +54,11 @@ class UserSerializer(serializers.ModelSerializer):
         validators=[UniqueValidator]
     )
 
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError('123')
+        return value
+
     class Meta:
         model = User
         fields = ('username', 'email', 'first_name', 'last_name', 'bio',
@@ -58,39 +67,39 @@ class UserSerializer(serializers.ModelSerializer):
         extra_kwargs = {'url': {'lookup_field': 'username'}}
 
 
-class UserSingUpSerializer(serializers.ModelSerializer):
+class UserSingUpSerializer(serializers.Serializer):
     """Сериализатор новых пользователей."""
 
-    class Meta:
-        model = User
-        fields = ('email', 'username')
+    username = serializers.CharField(max_length=150, required=True)
+    email = serializers.EmailField(max_length=50, required=True)
 
+    def validate(self, data):
+        username = data['username']
+        email = data['email']
 
-    # username = serializers.CharField(max_length=150, required=True)
-    # email = serializers.EmailField(max_length=150, required=True)
-    #
-    # def vаlidate_username(self, value):
-    #     if User.objects.filter(username__iexact=value).exists():
-    #         raise serializers.ValidationError('Пользователь с именем: '
-    #                                           f'{username}, уже существует')
-    #     if username == 'me':
-    #         raise serializers.ValidationError('Такое имя не доступно')
-    #     return username
-    #
-    # def validate_email(self, value):
-    #     if User.objects.filter(email__iexact=value).exists():
-    #         raise serializers.ValidationError('Адрес: '
-    #                                           f'{email} уже используетс')
-    #     return email
+        if username == 'me':
+            raise ValidationError(f'Логин {username} недоступен')
+        if not re.match(r'^[\w.@+-]+\Z', username):
+            raise serializers.ValidationError('Недопустимые символы')
+        if User.objects.filter(
+                username=username) and not User.objects.filter(
+                email=email
+        ):
+            raise serializers.ValidationError(
+                'Пользователь зарегистрирован с другой почтой'
+            )
+        if User.objects.filter(email=email) and not User.objects.filter(
+                username=username
+        ):
+            raise serializers.ValidationError(
+                'Пользователь зарегистрирован с другой почтой'
+            )
+        return data
 
 
 class UserGetTokenSerializer(serializers.ModelSerializer):
     """Плучение Токена."""
 
-    username = serializers.CharField(max_length=254, required=True)
-    confirmation_code = serializers.IntegerField(max_value=999999,
-                                                 min_value=100000,
-                                                 required=True)
     username = serializers.CharField(max_length=150, required=True)
     confirmation_code = serializers.IntegerField(required=True)
 
@@ -135,6 +144,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     """Сериализатор комментариев к отзывам."""
+
     author = serializers.SlugRelatedField(
         slug_field='username',
         read_only=True

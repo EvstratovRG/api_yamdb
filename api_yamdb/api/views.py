@@ -1,7 +1,7 @@
 from random import randint
-from django_filters import rest_framework as filters
-from django.core.exceptions import ValidationError
+
 from django.core.mail import send_mail
+from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
@@ -9,8 +9,6 @@ from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import viewsets, mixins, status, filters, permissions
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
@@ -18,6 +16,7 @@ from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 from reviews.models import Category, Genre, Title, Review, Comment, User
 from . import serializers, permissions
+from .serializers import UserSingUpSerializer
 
 
 class ListDestroyCreateWithFilters(
@@ -33,6 +32,7 @@ class ListDestroyCreateWithFilters(
 
 class CategoryViewSet(ListDestroyCreateWithFilters):
     """Представление категорий."""
+
     queryset = Category.objects.all()
     serializer_class = serializers.CategorySerializer
     permission_classes = (permissions.AdminOrReadOnly,)
@@ -40,6 +40,7 @@ class CategoryViewSet(ListDestroyCreateWithFilters):
 
 class GenreViewSet(ListDestroyCreateWithFilters):
     """Представление категорий."""
+
     queryset = Genre.objects.all()
     serializer_class = serializers.GenreSerializer
     permission_classes = (permissions.AdminOrReadOnly,)
@@ -47,6 +48,7 @@ class GenreViewSet(ListDestroyCreateWithFilters):
 
 class TitleViewSet(viewsets.ModelViewSet):
     """Представление произведений."""
+
     queryset = Title.objects.all().annotate(Avg('reviews__score'))
     serializer_class = serializers.TitleSerializer
     permission_classes = (permissions.AdminOrReadOnly,)
@@ -72,6 +74,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 class ReviewViewSet(viewsets.ModelViewSet):
     """Представление отзывов."""
+
     queryset = Review.objects.all()
     serializer_class = serializers.ReviewSerializer
     pagination_class = LimitOffsetPagination
@@ -105,6 +108,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     """Представление комментов к отзыву."""
+
     queryset = Comment.objects.all()
     serializer_class = serializers.CommentSerializer
     pagination_class = LimitOffsetPagination
@@ -145,6 +149,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 class UserViewSet(viewsets.ModelViewSet):
     """Представление произведений."""
+
     queryset = User.objects.all()
     serializer_class = serializers.UserSerializer
     permission_classes = (permissions.AdminOnly,)
@@ -176,15 +181,21 @@ class UserViewSet(viewsets.ModelViewSet):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def user_signup(request):
-    serializer = serializers.UserSingUpSerializer(data=request.data)
+    serializer = UserSingUpSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     username = serializer.data['username']
     email = serializer.data['email']
     confirmation_code = randint(10000, 99999)
-    user, _ = User.objects.get_or_create(username=username,
-                                         email=email,
-                                         confirmation_code=confirmation_code)
-
+    try:
+        user, _ = User.objects.get_or_create(
+            username=username,
+            email=email,
+        )
+    except IntegrityError:
+        return Response('Указанные данные не корректны',
+                        status=status.HTTP_400_BAD_REQUEST)
+    user.confirmation_code = confirmation_code
+    user.save()
     send_mail(subject='confirmation_code',
               message=f'Код: {confirmation_code}',
               from_email='yambd@gmail.com',
@@ -205,5 +216,5 @@ def get_token(request):
         return Response(f'Token: {token}',
                         status=status.HTTP_201_CREATED)
     else:
-        Response({'confirmation_code': 'Неверный код подтверждения!'},
-                 status=status.HTTP_404_NOT_FOUND)
+        return Response({'confirmation_code': 'Неверный код подтверждения!'},
+                        status=status.HTTP_400_BAD_REQUEST)
