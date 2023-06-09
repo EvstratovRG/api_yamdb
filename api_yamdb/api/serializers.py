@@ -1,6 +1,6 @@
-import re
+# import re
 
-from django.core.exceptions import ValidationError
+# from django.core.exceptions import ValidationError
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
@@ -57,7 +57,9 @@ class UserSerializer(serializers.ModelSerializer):
 
     def validate_email(self, value):
         if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError('123')
+            raise serializers.ValidationError(
+                'Аккаунт с таким email уже существует.'
+            )
         return value
 
     class Meta:
@@ -71,27 +73,24 @@ class UserSerializer(serializers.ModelSerializer):
 class UserSingUpSerializer(serializers.Serializer):
     """Сериализатор новых пользователей."""
 
-    username = serializers.CharField(max_length=150, required=True)
+    username = serializers.CharField(
+        max_length=150,
+        required=True,
+        validators=[validate_me]
+    )
     email = serializers.EmailField(max_length=50, required=True)
 
     def validate(self, data):
-        username = data['username']
-        email = data['email']
+        username = data.get('username')
+        email = data.get('email')
 
-        if username == 'me':
-            raise ValidationError(f'Логин {username} недоступен')
-        if not re.match(r'^[\w.@+-]+\Z', username):
-            raise serializers.ValidationError('Недопустимые символы')
-        if User.objects.filter(
-                username=username) and not User.objects.filter(
-                email=email
-        ):
+        if User.objects.filter(username=username).exists()\
+                and not User.objects.filter(email=email).exists():
             raise serializers.ValidationError(
                 'Пользователь зарегистрирован с другой почтой'
             )
-        if User.objects.filter(email=email) and not User.objects.filter(
-                username=username
-        ):
+        if User.objects.filter(email=email).exists()\
+                and not User.objects.filter(username=username).exists():
             raise serializers.ValidationError(
                 'Пользователь зарегистрирован с другой почтой'
             )
@@ -131,7 +130,10 @@ class TitleCreateAndUpdateSerializer(serializers.ModelSerializer):
 class ReviewSerializer(serializers.ModelSerializer):
     """Сериализатор отзывов."""
 
-    author = serializers.SerializerMethodField()
+    author = serializers.SlugRelatedField(
+        slug_field='username',
+        read_only=True
+    )
 
     def get_author(self, obj):
         return obj.author.username
