@@ -8,7 +8,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, mixins, status, filters
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.decorators import api_view, permission_classes, action
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import (AllowAny, IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
