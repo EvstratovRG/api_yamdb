@@ -1,11 +1,11 @@
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 from . validators import validate_year, validate_me
 
 
-CHOICES = [(i, i) for i in range(1, 11)]
 UsernameValidator = UnicodeUsernameValidator()
 
 
@@ -107,6 +107,7 @@ class Title(models.Model):
 
 
 class GenreTitle(models.Model):
+    """Связывающая модель для ManyToMany."""
     title = models.ForeignKey(Title, on_delete=models.CASCADE)
     genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
 
@@ -125,7 +126,10 @@ class Review(models.Model):
         on_delete=models.CASCADE,
         related_name='reviews'
     )
-    score = models.PositiveIntegerField(choices=CHOICES)
+    score = models.PositiveIntegerField(
+        blank=False, verbose_name='Оцените от 1 до 10',
+        validators=[MinValueValidator(1), MaxValueValidator(10)]
+    )
     pub_date = models.DateTimeField(auto_now_add=True, db_index=True)
 
     def __str__(self):

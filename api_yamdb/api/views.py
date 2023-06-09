@@ -5,17 +5,16 @@ from django.db import IntegrityError
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets, mixins, status, filters, permissions
+from rest_framework import viewsets, mixins, status, filters
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.decorators import api_view, permission_classes, action
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 from reviews.models import Category, Genre, Title, Review, Comment, User
-from . import serializers, permissions
-from .serializers import UserSingUpSerializer
+from . import serializers
+from .permissions import AdminOrReadOnly, AdminOnly, IsAuthorOrAdminOrModerator
 
 
 class ListDestroyCreateWithFilters(
@@ -28,7 +27,7 @@ class ListDestroyCreateWithFilters(
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
-    permission_classes = (permissions.AdminOrReadOnly,)
+    permission_classes = (AdminOrReadOnly,)
 
 
 class CategoryViewSet(ListDestroyCreateWithFilters):
@@ -51,7 +50,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all().annotate(Avg('reviews__score')).\
         select_related('category').prefetch_related('genre')
     serializer_class = serializers.TitleSerializer
-    permission_classes = (permissions.AdminOrReadOnly,)
+    permission_classes = (AdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend, filters.OrderingFilter)
     filterset_fields = ('name', 'year', 'category__slug', 'genre__slug',)
     ordering_fields = ['name', 'year']
@@ -78,7 +77,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
     serializer_class = serializers.ReviewSerializer
     pagination_class = LimitOffsetPagination
-    permission_classes = (permissions.IsAuthorOrAdminOrModerator,
+    permission_classes = (IsAuthorOrAdminOrModerator,
                           IsAuthenticatedOrReadOnly,)
 
     def get_queryset(self):
@@ -111,7 +110,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = serializers.CommentSerializer
     pagination_class = LimitOffsetPagination
-    permission_classes = (permissions.IsAuthorOrAdminOrModerator,
+    permission_classes = (IsAuthorOrAdminOrModerator,
                           IsAuthenticatedOrReadOnly,)
 
     def get_queryset(self):
@@ -149,7 +148,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     queryset = User.objects.all()
     serializer_class = serializers.UserSerializer
-    permission_classes = (permissions.AdminOnly,)
+    permission_classes = (AdminOnly,)
     pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend, filters.SearchFilter,)
     search_fields = ('username',)
@@ -158,20 +157,25 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(methods=['GET', 'PATCH'], detail=False,
             url_path='me', permission_classes=(IsAuthenticated,))
-    def chang_user_fields(self, request):
-        serializer = serializers.UserSerializer(request.user)
+    def change_user_fields(self, request):
         if request.method == 'PATCH':
             serializer = serializers.UserSerializer(
                 request.user,
                 data=request.data,
-                partial=True)
+                partial=True
+            )
             if serializer.is_valid(raise_exception=True):
-                if request.user.is_user or request.user.is_moderator:
-                    serializer.save(role=request.user.role, partial=True)
-                    return Response(serializer.data, status=status.HTTP_200_OK)
-                else:
+                if request.user.is_admin or\
+                        serializer.validated_data.get('role') is None:
                     serializer.save()
-                    return Response(serializer.data, status=status.HTTP_200_OK)
+                else:
+                    return Response(serializer.errors,
+                                    status=status.HTTP_403_FORBIDDEN)
+            else:
+                return Response(serializer.errors,
+                                status=status.HTTP_400_BAD_REQUEST)
+        else:
+            serializer = serializers.UserSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -180,7 +184,7 @@ class UserViewSet(viewsets.ModelViewSet):
 def user_signup(request):
     """Представление регистрации пользователя."""
 
-    serializer = UserSingUpSerializer(data=request.data)
+    serializer = serializers.UserSingUpSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     username = serializer.data['username']
     email = serializer.data['email']
