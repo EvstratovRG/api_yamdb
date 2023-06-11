@@ -15,8 +15,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews.models import Category, Genre, Title, Review, Comment, User
 from . import serializers
-from .permissions import (AdminOnly, AuthorOrReadOnly,
-                          ModeratorOrReadOnly, OnlyRead)
+from .permissions import (AdminOnly, Author,
+                          Moderator, OnlyRead)
 
 
 class ListDestroyCreateWithFilters(
@@ -79,8 +79,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
     serializer_class = serializers.ReviewSerializer
     pagination_class = LimitOffsetPagination
-    permission_classes = (OnlyRead | AuthorOrReadOnly | AdminOnly
-                          | ModeratorOrReadOnly,)
+    permission_classes = (OnlyRead | Author | AdminOnly
+                          | Moderator,)
 
     def get_queryset(self):
         title = get_object_or_404(Title, id=self.kwargs['title_id'])
@@ -112,8 +112,8 @@ class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = serializers.CommentSerializer
     pagination_class = LimitOffsetPagination
-    permission_classes = (OnlyRead | AuthorOrReadOnly | AdminOnly
-                          | ModeratorOrReadOnly,)
+    permission_classes = (OnlyRead | Author | AdminOnly
+                          | Moderator,)
 
     def get_queryset(self):
         review = get_object_or_404(

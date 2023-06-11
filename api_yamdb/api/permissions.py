@@ -12,7 +12,7 @@ class AdminOnly(permissions.BasePermission):
         return request.user.is_admin or request.user.is_superuser
 
 
-class ModeratorOrReadOnly(permissions.BasePermission):
+class Moderator(permissions.BasePermission):
     """Доступ только администратор."""
 
     def has_permission(self, request, view):
@@ -22,7 +22,7 @@ class ModeratorOrReadOnly(permissions.BasePermission):
         return request.user.is_moderator
 
 
-class AuthorOrReadOnly(permissions.BasePermission):
+class Author(permissions.BasePermission):
     """Доступ только администратор."""
 
     def has_permission(self, request, view):
