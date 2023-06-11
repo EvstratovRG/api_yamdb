@@ -15,8 +15,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews.models import Category, Genre, Title, Review, Comment, User
 from . import serializers
-from .permissions import AdminOnly, AuthorOrReadOnly, ModeratorOrReadOnly, \
-    AdminOrReadOnly
+from .permissions import (AdminOnly, AuthorOrReadOnly,
+                          ModeratorOrReadOnly, OnlyRead)
 
 
 class ListDestroyCreateWithFilters(
@@ -29,7 +29,7 @@ class ListDestroyCreateWithFilters(
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
-    permission_classes = (AdminOrReadOnly,)
+    permission_classes = (OnlyRead | AdminOnly,)
 
 
 class CategoryViewSet(ListDestroyCreateWithFilters):
@@ -52,7 +52,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all().annotate(Avg('reviews__score')).\
         select_related('category').prefetch_related('genre')
     serializer_class = serializers.TitleSerializer
-    permission_classes = (AdminOrReadOnly,)
+    permission_classes = (OnlyRead | AdminOnly,)
     filter_backends = (DjangoFilterBackend, filters.OrderingFilter)
     filterset_fields = ('name', 'year', 'category__slug', 'genre__slug',)
     ordering_fields = ['name', 'year']
@@ -79,7 +79,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
     serializer_class = serializers.ReviewSerializer
     pagination_class = LimitOffsetPagination
-    permission_classes = (AuthorOrReadOnly | AdminOnly | ModeratorOrReadOnly,)
+    permission_classes = (OnlyRead | AuthorOrReadOnly | AdminOnly
+                          | ModeratorOrReadOnly,)
 
     def get_queryset(self):
         title = get_object_or_404(Title, id=self.kwargs['title_id'])
@@ -111,7 +112,8 @@ class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = serializers.CommentSerializer
     pagination_class = LimitOffsetPagination
-    permission_classes = (AuthorOrReadOnly | AdminOnly | ModeratorOrReadOnly,)
+    permission_classes = (OnlyRead | AuthorOrReadOnly | AdminOnly
+                          | ModeratorOrReadOnly,)
 
     def get_queryset(self):
         review = get_object_or_404(
