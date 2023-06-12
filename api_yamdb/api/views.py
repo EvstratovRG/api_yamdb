@@ -8,8 +8,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, mixins, status, filters
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.decorators import api_view, permission_classes, action
-from rest_framework.permissions import (AllowAny, IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly)
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -167,8 +166,9 @@ class UserViewSet(viewsets.ModelViewSet):
                 partial=True
             )
             if serializer.is_valid(raise_exception=True):
-                if request.user.is_admin or\
-                        serializer.validated_data.get('role') is None:
+                if request.user.is_admin or (
+                    serializer.validated_data.get('role') is None
+                ):
                     serializer.save()
                 else:
                     return Response(serializer.errors,
