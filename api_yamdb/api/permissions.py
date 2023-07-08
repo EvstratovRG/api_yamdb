@@ -13,7 +13,7 @@ class AdminOnly(permissions.BasePermission):
 
 
 class Moderator(permissions.BasePermission):
-    """Доступ только администратор."""
+    """Доступ только модератор."""
 
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.is_moderator
@@ -23,7 +23,7 @@ class Moderator(permissions.BasePermission):
 
 
 class Author(permissions.BasePermission):
-    """Доступ только администратор."""
+    """Доступ только автору записи."""
 
     def has_permission(self, request, view):
         return request.user.is_authenticated
